@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+  <link href='http://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
+ <style>
+
+
+body {
+  background-color: #ffffff;
+  padding: 20px;
+  font-family: 'Lato', sans-serif;
+}
+
+h1 {
+  font-size: 50px;
+  word-break: break-all;
+}
+
+h4 {
+  text-align:center;
+  font-size: 24px;
+  margin: 20px;
+}
+
+/* ----- CONTENT CARD CSS ------- */
+.flex-container {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: flex-start;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.content {
+  background-color: white;
+  margin: 10px;
+  border-radius: 10px;
+  box-shadow: 2px 5px 7px 2px #EDEDED;
+}
+
+.heroImage {
+  width: 340px;
+  border-radius: 10px 10px 0px 0px;
+}
+
+table {
+  border-spacing: 10px;
+  border-collapse: separate;
+  margin-top: -15px;
+  padding: 10px;
+}
+
+td {
+  font-size: 12px;
+  text-align:center;
+  background-color: #4299E1;
+  color: #ffffff;
+  border-radius: 5px;
+  padding: 3px;
+}
+
+/* ----- SELECT BAR CSS ------- */
+.mySelector {
+  margin: 5px;
+  padding: 10px;
+  border-radius: 5px;
+  background-color: #44337A;
+  color: #ffffff;
+  font-weight: 600;
+  font-family: 'Lato', sans-serif;
+  font-size: 18px;
+}
+
+.headerContent {
+  padding: 16px;
+}
+
+.sticky {
+  position: fixed;
+  top: 0;
+  width: 100%;
+}
+
+.sticky + .headerContent {
+  padding-top: 102px;
+}
+
+#myHeader {
+  background-color: #ffffff;
+  padding: 20px;
+}
+
+
+/* --------------------- MAIN HTML START ----------------------- */
+ </style>
+ <head>
+  <title>Video Library</title>
+ </head>
+ <body>
+  <div>
+   <div>
+    <div id="myHeader">
+      <select class="filter mySelector">
+        <option disabled selected>Difficulty</option>
+        <option id="all" value="all">All</option>
+        <option id="Beginner" value="Beginner">Beginner</option>
+        <option value="Intermediate">Intermediate</option>
+        <option value="Advanced">Advanced</option>
+      </select>
+
+      <select class="filter mySelector">
+        <option disabled selected>Length</option>
+        <option value="all">All</option>
+        <option value="5 Min">5 Min</option>
+        <option value="10 Min">10 Min</option>
+        <option value="15 Min">15 Min</option>
+        <option value="20 Min">20 Min</option>
+      </select>
+      <select class="filter mySelector">
+        <option disabled selected>Instructor</option>
+        <option value="all">All</option>
+        <option value="Zach">Zach</option>
+        <option value="Kelly">Kelly</option>
+        <option value="Monica">Monica</option>
+        <option value="Kendell">Kendell</option>
+        <option value="Paul">Paul</option>
+        <option value="Tim">Tim</option>
+        <option value="Matt">Matt</option>
+        <option value="Matt">Brooke</option>
+      </select>
+      <select class="filter mySelector">
+        <option disabled selected>Category</option>
+        <option value="all">All</option>
+        <option value="Advanced Assessment">Advanced Assessment</option>
+        <option value="Simple Assessment">Simple Assessment</option>
+        <option value="Rubric Assessment">Rubric Assessment</option>
+        <option value="Student Profile">Student Profile</option>
+        <option value="Gradebook">Gradebook</option>
+        <option value="Recognitions">Recognitions</option>
+      </select>
+    </div>
+    <div id="video_library">
+    </div>
+    <div id="output">
+    </div>
+   </div>
+  </div>
+ </body>
+<script>
+/* --------------------- MAIN HTML END ----------------------- */
+/* ----- CREATE TABLE FROM GOOGLE SHEET ------ */
+
+$(document).ready(function(){
+  $.ajax({
+   url:"https://docs.google.com/spreadsheets/d/e/2PACX-1vSpgmeowC3EpqG_z23jzaF2kLPM8q7dz9xj1gzjJ0l52EQ4Cr4NpKjL8qlOP4yqb5qFy0Za9uSuTGWz/pub?gid=0&single=true&output=csv",
+   dataType:"text",
+   success:function(data)
+   {
+    var employee_data = data.split(/\r?\n|\r/);
+    var table_data = '<div class="flex-container">';
+    for(var count = 1; count<employee_data.length; count++)
+    {
+     var cell_data = employee_data[count].split(",");
+     table_data += '<div class="content ">';
+     table_data += '<a href="'+cell_data[6]+'" target="_blank"><img src="'+cell_data[0]+'" class="heroImage"></a>';
+     table_data += '<h4>'+cell_data[1]+'</h4>';
+     table_data += '<table class="flex-container"><tr><td>'+cell_data[2]+'</td><td>'+cell_data[3]+'</td><td>'+cell_data[4]+'</td><td>'+cell_data[5]+'</td></tr></table>';
+     table_data += '</div>';
+    }
+    table_data += '</div>';
+    $('#video_library').html(table_data);
+   }
+  });
+});
+
+
+/* ----- FILTER FUNCTIONALITY ------ */
+
+$(function() {
+  $(".filter").change(filterText);
+  var regexes = [];
+  clearFilter();
+
+  function filterText() {
+    var v = $(this).val();
+    var index = $(".filter").index(this);
+    console.log(this, v, index)
+    if (v == "all") {
+      clearFilter();
+    } else {
+      regexes[index] = new RegExp(v);
+      $('.content').show().filter(function() {
+        var t = $(this).text();
+        return !regexes.reduce(function(accumulator, regex) {
+          return accumulator && regex.test(t)
+        }, true)
+      }).hide();
+    }
+  }
+
+  function clearFilter() {
+    $('.filter').val('all').each(function(i) {
+      regexes[i] = /./;
+    });
+    $('.content').show();
+  }
+
+})
+
+/* ----- STICKY HEADER FUNCTIONALITY ------ */
+
+window.onscroll = function() {myFunction()};
+
+var header = document.getElementById("myHeader");
+var sticky = header.offsetTop;
+
+function myFunction() {
+  if (window.pageYOffset > sticky) {
+    header.classList.add("sticky");
+  } else {
+    header.classList.remove("sticky");
+  }
+}
+
+</script>
+</html>
+
